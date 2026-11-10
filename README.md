@@ -63,7 +63,6 @@ Some networks block device-to-device connections. Use `--tunnel` or your phone's
 
 - React Native
 - Expo
-- (add others, e.g. Express.js, MongoDB, etc.)
 
 ## Author
 
