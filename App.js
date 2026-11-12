@@ -23,7 +23,7 @@ export default function App() {
               headerTitleStyle: { fontWeight: 'bold' },
             }}
           >
-            <Stack.Screen name="Menu" component={MenuScreen} options={{ title: 'Bento Express' }} />
+            <Stack.Screen name="Menu" component={MenuScreen} options={{ title: 'BentoX Amirul' }} />
             <Stack.Screen name="Detail" component={DetailScreen} options={{ title: 'Maklumat Pesanan' }} />
             <Stack.Screen name="OrderSummary" component={OrderSummaryScreen} options={{ title: 'Ringkasan Pesanan' }} />
           </Stack.Navigator>

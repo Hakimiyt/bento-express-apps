@@ -11,7 +11,7 @@ export default function MenuScreen({ navigation }) {
   const bentoMenu = [
     { 
       id: "1", 
-      name: "Set Bento A",
+      name: "Bento Ayam Teriyaki",
       description: "Bento Ayam Teriyaki",
       price: "18.90",
       image: require("../assets/images/set_A.jpeg"),
@@ -23,7 +23,7 @@ export default function MenuScreen({ navigation }) {
     },
     { 
       id: "2", 
-      name: "Set Bento B",
+      name: "Bento Daging Yakiniku",
       description: "Bento Daging Yakiniku",
       price: "22.50",
       image: require("../assets/images/set_B.jpeg"),
@@ -35,7 +35,7 @@ export default function MenuScreen({ navigation }) {
     },
     { 
       id: "3", 
-      name: "Set Bento C",
+      name: "Bento Salmon Mentega",
       description: "Bento Salmon Mentega",
       price: "25.00",
       image: require("../assets/images/set_C.jpeg"),
@@ -47,7 +47,7 @@ export default function MenuScreen({ navigation }) {
     },
     { 
       id: "4", 
-      name: "Set Bento D",
+      name: "Bento Sayur dan Tauhu",
       description: "Bento Sayuran dan Tauhu",
       price: "15.00",
       image: require("../assets/images/set_D.jpeg"),
@@ -55,6 +55,18 @@ export default function MenuScreen({ navigation }) {
         { id: "extra-tofu", name: "Tauhu tambahan", price: 3 },
         { id: "edamame", name: "Edamame", price: 3 },
         { id: "extra-vegetables", name: "Sayur tambahan", price: 2.5 },
+      ],
+    },
+    {
+      id: "5",
+      name: "Bento Ayam Katsu",
+      description: "Ayam rangup dengan sos istimewa",
+      price: "20.90",
+      image: require("../assets/images/bento set e.jpg"),
+      addOns: [
+        { id: "extra-rice", name: "Nasi tambahan", price: 2 },
+        { id: "curry-sauce", name: "Sos kari Jepun", price: 2.5 },
+        { id: "fried-egg", name: "Telur mata", price: 2 },
       ],
     },
   ];
@@ -71,7 +83,7 @@ export default function MenuScreen({ navigation }) {
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <View>
-          <Text style={styles.brand}>BENTO EXPRESS</Text>
+          <Text style={styles.brand}>BENTOX AMIRUL</Text>
           <Text style={styles.title}>Menu hari ini</Text>
           <Text style={styles.subtitle}>Pilih bento kegemaran anda</Text>
         </View>

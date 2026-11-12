@@ -1,46 +1,35 @@
-# Bento Express App - Data & Kandungan Item
+# Bento Express - Data Menu
 
-## Senarai Set Bento
+## Senarai Bento
 
-| Kod Set | Nama Item | Harga (RM) |
+| Set | Nama Bento | Harga (RM) |
 | :---: | :--- | :---: |
-| **Set A** | Chicken Teriyaki Bento | 18.90 |
-| **Set B** | Beef Yakiniku Bento | 22.50 |
-| **Set C** | Salmon Butter Bento | 25.00 |
-| **Set D** | Veggie Tofu Bento | 15.00 |
+| A | Bento Ayam Teriyaki | 18.90 |
+| B | Bento Daging Yakiniku | 22.50 |
+| C | Bento Salmon Mentega | 25.00 |
+| D | Bento Sayur dan Tauhu | 15.00 |
+| E | Bento Ayam Katsu | 20.90 |
+| F | Bento Kari Daging | 23.90 |
+| G | Bento Salmon Teriyaki | 26.50 |
+| H | Bento Tauhu Rangup | 16.50 |
 
----
+## Tahap Kepedasan
 
-## Tahap Pedas (Spiciness Level)
+- **Tahap 1:** Tidak pedas
+- **Tahap 2:** Pedas sederhana
+- **Tahap 3:** Sangat pedas
 
-* **Level 1:** Mild / Less Spicy
-* **Level 2:** Medium / Standard
-* **Level 3:** Extra Spicy 
-
----
-
-### Array Data JSON (Untuk React Native `FlatList`):
+## Data Menu
 
 ```json
 [
-  {
-    "id": "A",
-    "name": "Chicken Teriyaki Bento",
-    "price": 18.90
-  },
-  {
-    "id": "B",
-    "name": "Beef Yakiniku Bento",
-    "price": 22.50
-  },
-  {
-    "id": "C",
-    "name": "Salmon Butter Bento",
-    "price": 25.00
-  },
-  {
-    "id": "D",
-    "name": "Veggie Tofu Bento",
-    "price": 15.00
-  }
+  { "id": "1", "name": "Bento Ayam Teriyaki", "description": "Bento Ayam Teriyaki", "price": 18.90 },
+  { "id": "2", "name": "Bento Daging Yakiniku", "description": "Bento Daging Yakiniku", "price": 22.50 },
+  { "id": "3", "name": "Bento Salmon Mentega", "description": "Bento Salmon Mentega", "price": 25.00 },
+  { "id": "4", "name": "Bento Sayur dan Tauhu", "description": "Bento Sayuran dan Tauhu", "price": 15.00 },
+  { "id": "5", "name": "Bento Ayam Katsu", "description": "Ayam rangup dengan sos istimewa", "price": 20.90 },
+  { "id": "6", "name": "Bento Kari Daging", "description": "Daging lembut dengan kuah kari Jepun", "price": 23.90 },
+  { "id": "7", "name": "Bento Salmon Teriyaki", "description": "Salmon panggang dengan sos teriyaki", "price": 26.50 },
+  { "id": "8", "name": "Bento Tauhu Rangup", "description": "Tauhu rangup bersama sayur-sayuran", "price": 16.50 }
 ]
+```
