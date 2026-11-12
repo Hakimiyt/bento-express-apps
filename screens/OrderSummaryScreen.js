@@ -1,12 +1,28 @@
-import { View, Text, StyleSheet, Alert, Image, Pressable, ScrollView } from "react-native";
+import { useState } from "react";
+import { View, Text, StyleSheet, Alert, Image, Pressable, ScrollView, TextInput } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import CustomButton from "../components/CustomButton";
 import { useOrder } from "../context/OrderContext";
 
+const getSelectedAddOns = (foodItem, selectedAddOnIds = []) =>
+  (foodItem?.addOns ?? []).filter((addOn) => selectedAddOnIds.includes(addOn.id));
+
+const getItemTotal = (item) =>
+  Number(item.foodItem?.price ?? 0) +
+  getSelectedAddOns(item.foodItem, item.selectedAddOnIds).reduce(
+    (total, addOn) => total + Number(addOn.price),
+    0
+  );
+
 export default function OrderSummaryScreen({ navigation }) {
   const { cartItems, setCartItems } = useOrder();
+  const [customerName, setCustomerName] = useState("");
+  const [customerPhone, setCustomerPhone] = useState("");
+  const [deliveryAddress, setDeliveryAddress] = useState("");
+  const [checkoutFeedback, setCheckoutFeedback] = useState("");
+  const [orderSubmitted, setOrderSubmitted] = useState(false);
   const totalPrice = cartItems.reduce(
-    (total, item) => total + Number(item.foodItem?.price ?? 0),
+    (total, item) => total + getItemTotal(item),
     0
   );
 
@@ -15,15 +31,22 @@ export default function OrderSummaryScreen({ navigation }) {
       return Alert.alert("Troli kosong", "Tambah item sebelum menghantar pesanan.");
     }
 
-    Alert.alert("Pesanan Berjaya!", "Pesanan bento anda sedang diproses.", [
-      {
-        text: "OK",
-        onPress: () => {
-          setCartItems([]);
-          navigation.navigate("Menu");
-        },
-      },
-    ]);
+    if (!customerName.trim() || !customerPhone.trim() || !deliveryAddress.trim()) {
+      setCheckoutFeedback("Sila isi nama, nombor telefon dan alamat penghantaran.");
+      return;
+    }
+
+    setCheckoutFeedback("");
+    setOrderSubmitted(true);
+  };
+
+  const handleFinishOrder = () => {
+    setCartItems([]);
+    setCustomerName("");
+    setCustomerPhone("");
+    setDeliveryAddress("");
+    setOrderSubmitted(false);
+    navigation.navigate("Menu");
   };
 
   return (
@@ -31,7 +54,7 @@ export default function OrderSummaryScreen({ navigation }) {
       <View style={styles.heading}>
         <Text style={styles.title}>Troli Anda</Text>
         <Text style={styles.subtitle}>
-          {cartItems.length === 1 ? "1 item dalam troli" : `${cartItems.length} item dalam troli`}
+          {cartItems.length === 1 ? "1 hidangan dalam troli" : `${cartItems.length} hidangan dalam troli`}
         </Text>
       </View>
 
@@ -39,6 +62,7 @@ export default function OrderSummaryScreen({ navigation }) {
         style={styles.cartList}
         contentContainerStyle={cartItems.length === 0 ? styles.emptyList : styles.cartContent}
         showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
       >
         {cartItems.length === 0 ? (
           <View style={styles.emptyState}>
@@ -58,7 +82,10 @@ export default function OrderSummaryScreen({ navigation }) {
             </Pressable>
           </View>
         ) : (
-          cartItems.map(({ id, foodItem, spiceLevel, specialNotes }) => (
+          cartItems.map((item) => {
+            const { id, foodItem, spiceLevel, specialNotes, selectedAddOnIds = [] } = item;
+            const selectedAddOns = getSelectedAddOns(foodItem, selectedAddOnIds);
+            return (
             <View key={id} style={styles.itemCard}>
               <View style={styles.itemHeader}>
                 {foodItem?.image ? (
@@ -74,46 +101,109 @@ export default function OrderSummaryScreen({ navigation }) {
                     {foodItem?.description ?? ""}
                   </Text>
                   <Text style={styles.itemPrice}>
-                    RM {Number(foodItem?.price ?? 0).toFixed(2)}
+                    Jumlah hidangan: RM {getItemTotal(item).toFixed(2)}
                   </Text>
                 </View>
               </View>
 
               <View style={styles.options}>
                 <View style={styles.optionPill}>
-                  <Text style={styles.optionText}>Pedas · Level {spiceLevel ?? 1}</Text>
+                  <Text style={styles.optionText}>Pedas · Tahap {spiceLevel ?? 1}</Text>
                 </View>
+                {selectedAddOns.length > 0 && (
+                  <View style={styles.addOnList}>
+                    <Text style={styles.addOnLabel}>Tambahan:</Text>
+                    {selectedAddOns.map((addOn) => (
+                      <Text key={addOn.id} style={styles.addOnText}>
+                        {addOn.name} · RM {Number(addOn.price).toFixed(2)}
+                      </Text>
+                    ))}
+                  </View>
+                )}
                 <Text style={styles.note} numberOfLines={2}>
                   Nota: {specialNotes?.trim() || "Tiada"}
                 </Text>
               </View>
 
-              <View style={styles.itemActions}>
-                <Pressable
-                  onPress={() =>
-                    navigation.push("Detail", {
-                      foodItem,
-                      spiceLevel,
-                      specialNotes,
-                      cartItemId: id,
-                    })
-                  }
-                  accessibilityRole="button"
-                  style={styles.editButton}
-                >
-                  <Text style={styles.editButtonText}>Edit</Text>
-                </Pressable>
-                <Pressable
-                  onPress={() => setCartItems((items) => items.filter((item) => item.id !== id))}
-                  accessibilityRole="button"
-                  accessibilityLabel={`Buang ${foodItem?.name ?? "item"} dari troli`}
-                  style={styles.removeButton}
-                >
-                  <Text style={styles.removeButtonText}>Buang</Text>
-                </Pressable>
-              </View>
+              {!orderSubmitted && (
+                <View style={styles.itemActions}>
+                  <Pressable
+                    onPress={() =>
+                      navigation.push("Detail", {
+                        foodItem,
+                        spiceLevel,
+                        specialNotes,
+                        selectedAddOnIds,
+                        cartItemId: id,
+                      })
+                    }
+                    accessibilityRole="button"
+                    style={styles.editButton}
+                  >
+                    <Text style={styles.editButtonText}>Ubah</Text>
+                  </Pressable>
+                  <Pressable
+                    onPress={() => setCartItems((items) => items.filter((item) => item.id !== id))}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Buang ${foodItem?.name ?? "item"} dari troli`}
+                    style={styles.removeButton}
+                  >
+                    <Text style={styles.removeButtonText}>Buang</Text>
+                  </Pressable>
+                </View>
+              )}
             </View>
-          ))
+            );
+          })
+        )}
+        {cartItems.length > 0 && !orderSubmitted && (
+          <View style={styles.customerForm}>
+            <Text style={styles.formTitle}>Maklumat pelanggan</Text>
+            <Text style={styles.formDescription}>Lengkapkan butiran untuk penghantaran pesanan anda.</Text>
+
+            <Text style={styles.fieldLabel}>Nama penuh</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Contoh: Ahmad bin Ali"
+              placeholderTextColor="#999999"
+              value={customerName}
+              onChangeText={(text) => {
+                setCustomerName(text);
+                setCheckoutFeedback("");
+              }}
+              autoCapitalize="words"
+              accessibilityLabel="Nama penuh"
+            />
+
+            <Text style={styles.fieldLabel}>Nombor telefon</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Contoh: 0123456789"
+              placeholderTextColor="#999999"
+              value={customerPhone}
+              onChangeText={(text) => {
+                setCustomerPhone(text);
+                setCheckoutFeedback("");
+              }}
+              keyboardType="phone-pad"
+              accessibilityLabel="Nombor telefon"
+            />
+
+            <Text style={styles.fieldLabel}>Alamat penghantaran</Text>
+            <TextInput
+              style={[styles.input, styles.addressInput]}
+              placeholder="Masukkan alamat lengkap"
+              placeholderTextColor="#999999"
+              value={deliveryAddress}
+              onChangeText={(text) => {
+                setDeliveryAddress(text);
+                setCheckoutFeedback("");
+              }}
+              multiline
+              textAlignVertical="top"
+              accessibilityLabel="Alamat penghantaran"
+            />
+          </View>
         )}
       </ScrollView>
 
@@ -123,14 +213,31 @@ export default function OrderSummaryScreen({ navigation }) {
             <Text style={styles.totalLabel}>Jumlah keseluruhan</Text>
             <Text style={styles.totalPrice}>RM {totalPrice.toFixed(2)}</Text>
           </View>
-          <CustomButton title="Hantar Semua Pesanan" onPress={handleSendOrder} variant="primary" />
-          <Pressable
-            onPress={() => navigation.navigate("Menu")}
-            accessibilityRole="button"
-            style={styles.continueButton}
-          >
-            <Text style={styles.continueButtonText}>Teruskan membeli</Text>
-          </Pressable>
+          {orderSubmitted ? (
+            <View style={styles.successFeedback} accessibilityRole="alert">
+              <Text style={styles.successTitle}>Pesanan berjaya dihantar!</Text>
+              <Text style={styles.successDescription}>
+                Terima kasih, {customerName.trim()}. Pesanan anda sedang diproses.
+              </Text>
+              <CustomButton title="Kembali ke Menu" onPress={handleFinishOrder} variant="primary" />
+            </View>
+          ) : (
+            <>
+              {checkoutFeedback ? (
+                <Text style={styles.errorFeedback} accessibilityRole="alert">
+                  {checkoutFeedback}
+                </Text>
+              ) : null}
+              <CustomButton title="Hantar Semua Pesanan" onPress={handleSendOrder} variant="primary" />
+              <Pressable
+                onPress={() => navigation.navigate("Menu")}
+                accessibilityRole="button"
+                style={styles.continueButton}
+              >
+                <Text style={styles.continueButtonText}>Teruskan membeli</Text>
+              </Pressable>
+            </>
+          )}
         </View>
       )}
     </SafeAreaView>
@@ -221,6 +328,48 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#EEEEEE",
   },
+  customerForm: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 14,
+    padding: 16,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: "#EEEEEE",
+  },
+  formTitle: {
+    color: "#222222",
+    fontSize: 18,
+    fontWeight: "800",
+  },
+  formDescription: {
+    color: "#777777",
+    fontSize: 13,
+    lineHeight: 18,
+    marginTop: 4,
+    marginBottom: 16,
+  },
+  fieldLabel: {
+    color: "#444444",
+    fontSize: 14,
+    fontWeight: "700",
+    marginBottom: 7,
+  },
+  input: {
+    minHeight: 46,
+    backgroundColor: "#F8F8F8",
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: "#E8E8E8",
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    color: "#222222",
+    fontSize: 14,
+    marginBottom: 14,
+  },
+  addressInput: {
+    minHeight: 82,
+    marginBottom: 0,
+  },
   itemHeader: {
     flexDirection: "row",
     alignItems: "center",
@@ -278,6 +427,18 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "600",
   },
+  addOnList: {
+    gap: 4,
+  },
+  addOnLabel: {
+    color: "#555555",
+    fontSize: 13,
+    fontWeight: "700",
+  },
+  addOnText: {
+    color: "#666666",
+    fontSize: 13,
+  },
   note: {
     color: "#777777",
     fontSize: 13,
@@ -315,6 +476,34 @@ const styles = StyleSheet.create({
     paddingBottom: 10,
     borderTopWidth: 1,
     borderColor: "#EEEEEE",
+  },
+  errorFeedback: {
+    color: "#A83225",
+    backgroundColor: "#FCE9E6",
+    borderRadius: 8,
+    padding: 10,
+    marginBottom: 12,
+    fontSize: 13,
+    lineHeight: 18,
+  },
+  successFeedback: {
+    backgroundColor: "#EAF7EF",
+    borderRadius: 12,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: "#C9E9D3",
+  },
+  successTitle: {
+    color: "#246B3B",
+    fontSize: 16,
+    fontWeight: "800",
+  },
+  successDescription: {
+    color: "#477554",
+    fontSize: 13,
+    lineHeight: 18,
+    marginTop: 5,
+    marginBottom: 12,
   },
   totalRow: {
     flexDirection: "row",

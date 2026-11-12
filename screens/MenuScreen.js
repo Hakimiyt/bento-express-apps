@@ -11,31 +11,51 @@ export default function MenuScreen({ navigation }) {
   const bentoMenu = [
     { 
       id: "1", 
-      name: "Bento Set A", 
-      description: "Chicken Teriyaki Bento",
-      price: "18.90", 
-      image: require("../assets/images/set_A.jpeg") 
+      name: "Set Bento A",
+      description: "Bento Ayam Teriyaki",
+      price: "18.90",
+      image: require("../assets/images/set_A.jpeg"),
+      addOns: [
+        { id: "extra-rice", name: "Nasi tambahan", price: 2 },
+        { id: "fried-egg", name: "Telur mata", price: 2 },
+        { id: "miso-soup", name: "Sup miso", price: 3.5 },
+      ],
     },
     { 
       id: "2", 
-      name: "Bento Set B", 
-      description: "Beef Yakiniku Bento",
-      price: "22.50", 
-      image: require("../assets/images/set_B.jpeg") 
+      name: "Set Bento B",
+      description: "Bento Daging Yakiniku",
+      price: "22.50",
+      image: require("../assets/images/set_B.jpeg"),
+      addOns: [
+        { id: "extra-beef", name: "Daging tambahan", price: 6 },
+        { id: "fried-egg", name: "Telur mata", price: 2 },
+        { id: "miso-soup", name: "Sup miso", price: 3.5 },
+      ],
     },
     { 
       id: "3", 
-      name: "Bento Set C", 
-      description: "Salmon Butter Bento",
-      price: "25.00", 
-      image: require("../assets/images/set_C.jpeg") 
+      name: "Set Bento C",
+      description: "Bento Salmon Mentega",
+      price: "25.00",
+      image: require("../assets/images/set_C.jpeg"),
+      addOns: [
+        { id: "extra-salmon", name: "Salmon tambahan", price: 8 },
+        { id: "edamame", name: "Edamame", price: 3 },
+        { id: "miso-soup", name: "Sup miso", price: 3.5 },
+      ],
     },
     { 
       id: "4", 
-      name: "Bento Set D", 
-      description: "Veggie Tofu Bento",
-      price: "15.00", 
-      image: require("../assets/images/set_D.jpeg") 
+      name: "Set Bento D",
+      description: "Bento Sayuran dan Tauhu",
+      price: "15.00",
+      image: require("../assets/images/set_D.jpeg"),
+      addOns: [
+        { id: "extra-tofu", name: "Tauhu tambahan", price: 3 },
+        { id: "edamame", name: "Edamame", price: 3 },
+        { id: "extra-vegetables", name: "Sayur tambahan", price: 2.5 },
+      ],
     },
   ];
 
