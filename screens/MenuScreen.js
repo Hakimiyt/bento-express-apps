@@ -3,9 +3,11 @@ import { View, Text, StyleSheet, FlatList, TextInput, Pressable, ScrollView } fr
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Image } from "expo-image";
 import FoodCard from "../components/FoodCard";
+import { useAuth } from "../context/AuthContext";
 import { useOrder } from "../context/OrderContext";
 
 export default function MenuScreen({ navigation }) {
+  const { user } = useAuth();
   const { cartItems } = useOrder();
   const [searchText, setSearchText] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("Semua");
@@ -159,25 +161,36 @@ export default function MenuScreen({ navigation }) {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <View>
+        <View style={styles.headerCopy}>
           <Text style={styles.brand}>BENTOX AMIRUL</Text>
-          <Text style={styles.title}>Menu hari ini</Text>
+          <Text style={styles.title}>Menu BentoX Amirul</Text>
           <Text style={styles.subtitle}>Makanan Jepun dan minuman kegemaran</Text>
         </View>
-        <Pressable
-          onPress={openCart}
-          accessibilityRole="button"
-          accessibilityLabel={`Buka troli, ${cartItems.length} item`}
-          hitSlop={10}
-          style={styles.cartButton}
-        >
-          <Image source={require("../assets/icons/shopping-cart-icon.svg")} style={styles.cartIcon} contentFit="contain"/>
-          {cartItems.length > 0 && (
-            <View style={styles.cartBadge}>
-              <Text style={styles.cartBadgeText}>{cartItems.length}</Text>
-            </View>
-          )}
-        </Pressable>
+        <View style={styles.headerActions}>
+          <Pressable
+            onPress={() => navigation.navigate("Profile")}
+            accessibilityRole="button"
+            accessibilityLabel={`Buka profil ${user?.name ?? ""}`}
+            hitSlop={8}
+            style={styles.profileButton}
+          >
+            <Text style={styles.profileInitial}>{user?.name?.trim()?.[0]?.toUpperCase() ?? "U"}</Text>
+          </Pressable>
+          <Pressable
+            onPress={openCart}
+            accessibilityRole="button"
+            accessibilityLabel={`Buka troli, ${cartItems.length} item`}
+            hitSlop={10}
+            style={styles.cartButton}
+          >
+            <Image source={require("../assets/icons/shopping-cart-icon.svg")} style={styles.cartIcon} contentFit="contain"/>
+            {cartItems.length > 0 && (
+              <View style={styles.cartBadge}>
+                <Text style={styles.cartBadgeText}>{cartItems.length}</Text>
+              </View>
+            )}
+          </Pressable>
+        </View>
       </View>
 
       <View style={styles.searchContainer}>
@@ -258,6 +271,15 @@ const styles = StyleSheet.create({
     paddingTop: 16,
     paddingBottom: 20,
   },
+  headerCopy: {
+    flex: 1,
+    paddingRight: 8,
+  },
+  headerActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
   brand: {
     fontSize: 11,
     fontWeight: "800",
@@ -278,6 +300,21 @@ const styles = StyleSheet.create({
   cartIcon: {
     width: 22,
     height: 22,
+  },
+  profileButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 15,
+    backgroundColor: "#FFF0EC",
+    borderWidth: 1,
+    borderColor: "#F0EAE4",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  profileInitial: {
+    color: "#E05A47",
+    fontSize: 16,
+    fontWeight: "800",
   },
   cartButton: {
     position: "relative",

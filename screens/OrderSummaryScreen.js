@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { View, Text, StyleSheet, Alert, Image, Pressable, ScrollView, TextInput } from "react-native";
+import { View, Text, StyleSheet, Image, Pressable, ScrollView, TextInput } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import CustomButton from "../components/CustomButton";
+import AlertPopup from "../components/AlertPopup";
 import { useOrder } from "../context/OrderContext";
 
 const getSelectedAddOns = (foodItem, selectedAddOnIds = []) =>
@@ -14,12 +15,32 @@ const getItemTotal = (item) =>
     0
   );
 
+const paymentMethods = [
+  {
+    id: "cash_on_delivery",
+    label: "COD (Tunai semasa penghantaran)",
+    description: "Bayar apabila pesanan diterima",
+  },
+  {
+    id: "fpx",
+    label: "FPX",
+    description: "Perbankan dalam talian",
+  },
+  {
+    id: "e_wallet",
+    label: "E-Wallet",
+    description: "Dompet digital",
+  },
+];
+
 export default function OrderSummaryScreen({ navigation }) {
-  const { cartItems, setCartItems } = useOrder();
+  const { cartItems, setCartItems, addRecentOrder } = useOrder();
   const [customerName, setCustomerName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
   const [deliveryAddress, setDeliveryAddress] = useState("");
-  const [checkoutFeedback, setCheckoutFeedback] = useState("");
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("");
+  const [checkoutErrorTitle, setCheckoutErrorTitle] = useState("");
+  const [checkoutError, setCheckoutError] = useState("");
   const [orderSubmitted, setOrderSubmitted] = useState(false);
   const totalPrice = cartItems.reduce(
     (total, item) => total + getItemTotal(item),
@@ -28,15 +49,38 @@ export default function OrderSummaryScreen({ navigation }) {
 
   const handleSendOrder = () => {
     if (cartItems.length === 0) {
-      return Alert.alert("Troli kosong", "Tambah item sebelum menghantar pesanan.");
-    }
-
-    if (!customerName.trim() || !customerPhone.trim() || !deliveryAddress.trim()) {
-      setCheckoutFeedback("Sila isi nama, nombor telefon dan alamat penghantaran.");
+      setCheckoutErrorTitle("Troli kosong");
+      setCheckoutError("Tambah item sebelum menghantar pesanan.");
       return;
     }
 
-    setCheckoutFeedback("");
+    if (!customerName.trim() || !customerPhone.trim() || !deliveryAddress.trim()) {
+      setCheckoutErrorTitle("Maklumat belum lengkap");
+      setCheckoutError("Sila isi nama, nombor telefon dan alamat penghantaran.");
+      return;
+    }
+
+    const paymentMethod = paymentMethods.find(
+      (method) => method.id === selectedPaymentMethod
+    );
+    if (!paymentMethod) {
+      setCheckoutErrorTitle("Kaedah bayaran belum dipilih");
+      setCheckoutError("Sila pilih kaedah bayaran untuk meneruskan pesanan.");
+      return;
+    }
+
+    setCheckoutError("");
+    addRecentOrder({
+      id: `${Date.now()}`,
+      items: cartItems.map((item) => ({
+        id: item.id,
+        name: item.foodItem?.name ?? "Menu",
+        total: getItemTotal(item),
+      })),
+      total: totalPrice,
+      paymentMethod: paymentMethod.label,
+      placedAt: new Date().toISOString(),
+    });
     setOrderSubmitted(true);
   };
 
@@ -45,6 +89,7 @@ export default function OrderSummaryScreen({ navigation }) {
     setCustomerName("");
     setCustomerPhone("");
     setDeliveryAddress("");
+    setSelectedPaymentMethod("");
     setOrderSubmitted(false);
     navigation.navigate("Menu");
   };
@@ -173,7 +218,6 @@ export default function OrderSummaryScreen({ navigation }) {
               value={customerName}
               onChangeText={(text) => {
                 setCustomerName(text);
-                setCheckoutFeedback("");
               }}
               autoCapitalize="words"
               accessibilityLabel="Nama penuh"
@@ -187,7 +231,6 @@ export default function OrderSummaryScreen({ navigation }) {
               value={customerPhone}
               onChangeText={(text) => {
                 setCustomerPhone(text);
-                setCheckoutFeedback("");
               }}
               keyboardType="phone-pad"
               accessibilityLabel="Nombor telefon"
@@ -201,12 +244,46 @@ export default function OrderSummaryScreen({ navigation }) {
               value={deliveryAddress}
               onChangeText={(text) => {
                 setDeliveryAddress(text);
-                setCheckoutFeedback("");
               }}
               multiline
               textAlignVertical="top"
               accessibilityLabel="Alamat penghantaran"
             />
+
+            <Text style={styles.fieldLabel}>Kaedah bayaran</Text>
+            <Text style={styles.paymentHint}>
+              Pilih kaedah bayaran pilihan anda.
+            </Text>
+            {paymentMethods.map((method) => {
+              const isSelected = selectedPaymentMethod === method.id;
+              return (
+                <Pressable
+                  key={method.id}
+                  onPress={() => setSelectedPaymentMethod(method.id)}
+                  accessibilityRole="radio"
+                  accessibilityState={{ checked: isSelected }}
+                  style={[
+                    styles.paymentOption,
+                    isSelected && styles.paymentOptionSelected,
+                  ]}
+                >
+                  <View
+                    style={[
+                      styles.radioOuter,
+                      isSelected && styles.radioOuterSelected,
+                    ]}
+                  >
+                    {isSelected ? <View style={styles.radioInner} /> : null}
+                  </View>
+                  <View style={styles.paymentOptionCopy}>
+                    <Text style={styles.paymentOptionTitle}>{method.label}</Text>
+                    <Text style={styles.paymentOptionDescription}>
+                      {method.description}
+                    </Text>
+                  </View>
+                </Pressable>
+              );
+            })}
           </View>
         )}
       </ScrollView>
@@ -217,21 +294,8 @@ export default function OrderSummaryScreen({ navigation }) {
             <Text style={styles.totalLabel}>Jumlah keseluruhan</Text>
             <Text style={styles.totalPrice}>RM {totalPrice.toFixed(2)}</Text>
           </View>
-          {orderSubmitted ? (
-            <View style={styles.successFeedback} accessibilityRole="alert">
-              <Text style={styles.successTitle}>Pesanan berjaya dihantar!</Text>
-              <Text style={styles.successDescription}>
-                Terima kasih, {customerName.trim()}. Pesanan anda sedang diproses.
-              </Text>
-              <CustomButton title="Kembali ke Menu" onPress={handleFinishOrder} variant="primary" />
-            </View>
-          ) : (
+          {!orderSubmitted && (
             <>
-              {checkoutFeedback ? (
-                <Text style={styles.errorFeedback} accessibilityRole="alert">
-                  {checkoutFeedback}
-                </Text>
-              ) : null}
               <CustomButton title="Hantar Semua Pesanan" onPress={handleSendOrder} variant="primary" />
               <Pressable
                 onPress={() => navigation.navigate("Menu")}
@@ -244,6 +308,31 @@ export default function OrderSummaryScreen({ navigation }) {
           )}
         </View>
       )}
+      <AlertPopup
+        visible={Boolean(checkoutError) || orderSubmitted}
+        title={orderSubmitted ? "Pesanan berjaya dihantar!" : checkoutErrorTitle}
+        message={
+          orderSubmitted
+            ? `Terima kasih!. Pesanan anda sedang diproses.`
+            : checkoutError
+        }
+        variant={orderSubmitted ? "success" : "error"}
+        primaryLabel={orderSubmitted ? "Kembali ke Menu" : "Baik"}
+        onPrimaryPress={
+          orderSubmitted
+            ? handleFinishOrder
+            : () => {
+                setCheckoutErrorTitle("");
+                setCheckoutError("");
+              }
+        }
+        onDismiss={() => {
+          if (!orderSubmitted) {
+            setCheckoutErrorTitle("");
+            setCheckoutError("");
+          }
+        }}
+      />
     </SafeAreaView>
   );
 }
@@ -374,6 +463,61 @@ const styles = StyleSheet.create({
     minHeight: 82,
     marginBottom: 0,
   },
+  paymentHint: {
+    color: "#817B75",
+    fontSize: 12,
+    lineHeight: 18,
+    marginTop: -2,
+    marginBottom: 10,
+  },
+  paymentOption: {
+    minHeight: 62,
+    flexDirection: "row",
+    alignItems: "center",
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: "#E8E8E8",
+    backgroundColor: "#FFFFFF",
+    paddingHorizontal: 11,
+    paddingVertical: 9,
+    marginBottom: 8,
+  },
+  paymentOptionSelected: {
+    borderColor: "#E05A47",
+    backgroundColor: "#FFF7F5",
+  },
+  radioOuter: {
+    width: 20,
+    height: 20,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 10,
+    borderWidth: 1.5,
+    borderColor: "#A39A92",
+    marginRight: 10,
+  },
+  radioOuterSelected: {
+    borderColor: "#E05A47",
+  },
+  radioInner: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: "#E05A47",
+  },
+  paymentOptionCopy: {
+    flex: 1,
+  },
+  paymentOptionTitle: {
+    color: "#39332E",
+    fontSize: 13,
+    fontWeight: "700",
+  },
+  paymentOptionDescription: {
+    color: "#817B75",
+    fontSize: 11,
+    marginTop: 3,
+  },
   itemHeader: {
     flexDirection: "row",
     alignItems: "center",
@@ -485,34 +629,6 @@ const styles = StyleSheet.create({
     paddingBottom: 10,
     borderTopWidth: 1,
     borderColor: "#EEEEEE",
-  },
-  errorFeedback: {
-    color: "#A83225",
-    backgroundColor: "#FCE9E6",
-    borderRadius: 8,
-    padding: 10,
-    marginBottom: 12,
-    fontSize: 13,
-    lineHeight: 18,
-  },
-  successFeedback: {
-    backgroundColor: "#EAF7EF",
-    borderRadius: 12,
-    padding: 14,
-    borderWidth: 1,
-    borderColor: "#C9E9D3",
-  },
-  successTitle: {
-    color: "#246B3B",
-    fontSize: 16,
-    fontWeight: "800",
-  },
-  successDescription: {
-    color: "#477554",
-    fontSize: 13,
-    lineHeight: 18,
-    marginTop: 5,
-    marginBottom: 12,
   },
   totalRow: {
     flexDirection: "row",

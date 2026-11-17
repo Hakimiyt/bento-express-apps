@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
-import { View, Text, StyleSheet, TextInput, Alert, ScrollView, Image, Pressable } from "react-native";
+import { View, Text, StyleSheet, TextInput, ScrollView, Image, Pressable } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import CustomButton from "../components/CustomButton";
+import AlertPopup from "../components/AlertPopup";
 import { useOrder } from "../context/OrderContext";
 
 export default function DetailScreen({ route, navigation }) {
@@ -12,7 +13,7 @@ export default function DetailScreen({ route, navigation }) {
   const [spiceLevel, setSpiceLevel] = useState(route.params?.spiceLevel ?? 1);
   const [specialNotes, setSpecialNotes] = useState(route.params?.specialNotes ?? "");
   const [selectedAddOnIds, setSelectedAddOnIds] = useState(route.params?.selectedAddOnIds ?? []);
-  const [itemAdded, setItemAdded] = useState(false);
+  const [notification, setNotification] = useState(null);
   const selectedAddOnTotal = (foodItem?.addOns ?? [])
     .filter((addOn) => selectedAddOnIds.includes(addOn.id))
     .reduce((total, addOn) => total + Number(addOn.price), 0);
@@ -27,10 +28,20 @@ export default function DetailScreen({ route, navigation }) {
   const handleConfirmOrder = () => {
     // Message if Error
     if (!foodItem) {
-      return Alert.alert("Ralat", "Tiada maklumat makanan ditemui.");
+      setNotification({
+        title: "Ralat",
+        message: "Tiada maklumat makanan ditemui.",
+        variant: "error",
+      });
+      return;
     }
     if (cartItemId && !cartItems.some((item) => item.id === cartItemId)) {
-      return Alert.alert("Ralat", "Pesanan ini tidak ditemui dalam troli.");
+      setNotification({
+        title: "Ralat",
+        message: "Pesanan ini tidak ditemui dalam troli.",
+        variant: "error",
+      });
+      return;
     }
 
     const updatedItem = {
@@ -43,14 +54,31 @@ export default function DetailScreen({ route, navigation }) {
 
     if (cartItemId) {
       setCartItems((items) => items.map((item) => item.id === cartItemId ? updatedItem : item));
-      Alert.alert("Pesanan Dikemas Kini", "Perubahan pesanan telah disimpan.", [
-        { text: "Baik", onPress: () => navigation.goBack() },
-      ]);
+      setNotification({
+        title: "Pesanan dikemas kini",
+        message: "Perubahan pesanan telah disimpan.",
+        variant: "success",
+        primaryLabel: "Baik",
+        onPrimaryPress: () => {
+          setNotification(null);
+          navigation.goBack();
+        },
+      });
       return;
     }
 
     setCartItems((items) => [...items, updatedItem]);
-    setItemAdded(true);
+    setNotification({
+      title: "Berjaya ditambah ke troli",
+      message: `${foodItem.name} sedia untuk dipesan.`,
+      variant: "success",
+      primaryLabel: "Lihat troli",
+      onPrimaryPress: () => {
+        setNotification(null);
+        navigation.navigate("OrderSummary");
+      },
+      secondaryLabel: "Teruskan memilih",
+    });
   };
 
   return (
@@ -71,7 +99,7 @@ export default function DetailScreen({ route, navigation }) {
             {foodItem?.name ?? "Nama makanan tidak tersedia"}
           </Text>
           <Text style={styles.price}>
-            {foodItem?.price ? `Harga asas: RM ${foodItem.price}` : "-"}
+            {foodItem?.price ? `RM ${foodItem.price}` : "-"}
           </Text>
           <Text style={styles.description}>
             {foodItem?.description ?? "Deskripsi tidak tersedia"}
@@ -143,21 +171,18 @@ export default function DetailScreen({ route, navigation }) {
             onPress={handleConfirmOrder}
             variant="primary"
           />
-          {itemAdded && (
-            <View style={styles.addedFeedback} accessibilityRole="alert">
-              <Text style={styles.addedTitle}>Berjaya ditambah ke troli</Text>
-              <Text style={styles.addedMessage}>{foodItem.name} sedia untuk dipesan.</Text>
-              <Pressable
-                onPress={() => navigation.navigate("OrderSummary")}
-                accessibilityRole="button"
-                style={styles.cartLink}
-              >
-                <Text style={styles.cartLinkText}>Lihat troli</Text>
-              </Pressable>
-            </View>
-          )}
         </View>
       </ScrollView>
+      <AlertPopup
+        visible={Boolean(notification)}
+        title={notification?.title}
+        message={notification?.message}
+        variant={notification?.variant}
+        primaryLabel={notification?.primaryLabel}
+        onPrimaryPress={notification?.onPrimaryPress}
+        secondaryLabel={notification?.secondaryLabel}
+        onDismiss={() => setNotification(null)}
+      />
     </SafeAreaView>
   );
 }
@@ -311,36 +336,5 @@ const styles = StyleSheet.create({
     textAlignVertical: "top",
     fontSize: 14,
     color: "#000000",
-  },
-  addedFeedback: {
-    backgroundColor: "#EAF7EF",
-    borderRadius: 10,
-    padding: 14,
-    marginTop: 14,
-    borderWidth: 1,
-    borderColor: "#C9E9D3",
-  },
-  addedTitle: {
-    color: "#246B3B",
-    fontSize: 15,
-    fontWeight: "700",
-  },
-  addedMessage: {
-    color: "#477554",
-    fontSize: 13,
-    marginTop: 4,
-  },
-  cartLink: {
-    alignSelf: "flex-start",
-    minHeight: 40,
-    justifyContent: "center",
-    marginTop: 4,
-    paddingRight: 8,
-  },
-  cartLinkText: {
-    color: "#246B3B",
-    fontSize: 14,
-    fontWeight: "700",
-    textDecorationLine: "underline",
   },
 });
