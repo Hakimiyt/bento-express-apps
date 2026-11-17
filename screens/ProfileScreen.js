@@ -162,6 +162,11 @@ export default function ProfileScreen() {
                     {item.name} · RM {item.total.toFixed(2)}
                   </Text>
                 ))}
+                {order.discountAmount > 0 ? (
+                  <Text style={styles.orderDiscount}>
+                    {order.voucherCode} · Diskaun 10%: - RM {order.discountAmount.toFixed(2)}
+                  </Text>
+                ) : null}
                 <Text style={styles.orderPayment}>
                   Bayaran: {order.paymentMethod ?? "Tidak dinyatakan"}
                 </Text>
@@ -366,6 +371,12 @@ const styles = StyleSheet.create({
   orderPayment: {
     color: "#817B75",
     fontSize: 12,
+    marginTop: 8,
+  },
+  orderDiscount: {
+    color: "#246B3B",
+    fontSize: 12,
+    fontWeight: "600",
     marginTop: 8,
   },
   orderTotalRow: {

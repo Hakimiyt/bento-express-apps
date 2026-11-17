@@ -4,6 +4,11 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import CustomButton from "../components/CustomButton";
 import AlertPopup from "../components/AlertPopup";
 import { useOrder } from "../context/OrderContext";
+import {
+  getPromotionPrice,
+  PROMOTION_DISCOUNT_RATE,
+  PROMOTION_VOUCHER_CODE,
+} from "../utils/promotion";
 
 const getSelectedAddOns = (foodItem, selectedAddOnIds = []) =>
   (foodItem?.addOns ?? []).filter((addOn) => selectedAddOnIds.includes(addOn.id));
@@ -39,13 +44,36 @@ export default function OrderSummaryScreen({ navigation }) {
   const [customerPhone, setCustomerPhone] = useState("");
   const [deliveryAddress, setDeliveryAddress] = useState("");
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("");
+  const [voucherCode, setVoucherCode] = useState("");
+  const [voucherApplied, setVoucherApplied] = useState(false);
   const [checkoutErrorTitle, setCheckoutErrorTitle] = useState("");
   const [checkoutError, setCheckoutError] = useState("");
   const [orderSubmitted, setOrderSubmitted] = useState(false);
-  const totalPrice = cartItems.reduce(
+  const subtotalPrice = cartItems.reduce(
     (total, item) => total + getItemTotal(item),
     0
   );
+  const promotedTotal = cartItems.reduce(
+    (total, item) => total + getPromotionPrice(getItemTotal(item)),
+    0
+  );
+  const discountAmount = voucherApplied
+    ? Number((subtotalPrice - promotedTotal).toFixed(2))
+    : 0;
+  const totalPrice = Number((subtotalPrice - discountAmount).toFixed(2));
+
+  const handleApplyVoucher = () => {
+    if (voucherCode.trim().toUpperCase() !== PROMOTION_VOUCHER_CODE) {
+      setVoucherApplied(false);
+      setCheckoutErrorTitle("Kod voucher tidak sah");
+      setCheckoutError(`Masukkan kod ${PROMOTION_VOUCHER_CODE} untuk diskaun 10%.`);
+      return;
+    }
+
+    setCheckoutErrorTitle("");
+    setCheckoutError("");
+    setVoucherApplied(true);
+  };
 
   const handleSendOrder = () => {
     if (cartItems.length === 0) {
@@ -78,6 +106,9 @@ export default function OrderSummaryScreen({ navigation }) {
         total: getItemTotal(item),
       })),
       total: totalPrice,
+      subtotal: subtotalPrice,
+      discountAmount,
+      voucherCode: voucherApplied ? PROMOTION_VOUCHER_CODE : "",
       paymentMethod: paymentMethod.label,
       placedAt: new Date().toISOString(),
     });
@@ -90,6 +121,8 @@ export default function OrderSummaryScreen({ navigation }) {
     setCustomerPhone("");
     setDeliveryAddress("");
     setSelectedPaymentMethod("");
+    setVoucherCode("");
+    setVoucherApplied(false);
     setOrderSubmitted(false);
     navigation.navigate("Menu");
   };
@@ -250,6 +283,34 @@ export default function OrderSummaryScreen({ navigation }) {
               accessibilityLabel="Alamat penghantaran"
             />
 
+            <Text style={styles.fieldLabel}>Kod voucher</Text>
+            <View style={styles.voucherRow}>
+              <TextInput
+                style={[styles.input, styles.voucherInput]}
+                value={voucherCode}
+                onChangeText={(text) => {
+                  setVoucherCode(text);
+                  setVoucherApplied(false);
+                }}
+                placeholder="Masukkan kod voucher"
+                placeholderTextColor="#999999"
+                autoCapitalize="characters"
+                accessibilityLabel="Kod voucher"
+              />
+              <Pressable
+                onPress={handleApplyVoucher}
+                accessibilityRole="button"
+                style={styles.voucherButton}
+              >
+                <Text style={styles.voucherButtonText}>Guna</Text>
+              </Pressable>
+            </View>
+            <Text style={voucherApplied ? styles.voucherSuccess : styles.voucherHint}>
+              {voucherApplied
+                ? `${PROMOTION_VOUCHER_CODE} berjaya digunakan. Diskaun 10%.`
+                : `Gunakan ${PROMOTION_VOUCHER_CODE} untuk diskaun 10%.`}
+            </Text>
+
             <Text style={styles.fieldLabel}>Kaedah bayaran</Text>
             <Text style={styles.paymentHint}>
               Pilih kaedah bayaran pilihan anda.
@@ -290,8 +351,28 @@ export default function OrderSummaryScreen({ navigation }) {
 
       {cartItems.length > 0 && (
         <View style={styles.checkout}>
+          {voucherApplied && (
+            <>
+              <View style={styles.discountRow}>
+                <Text style={styles.discountLabel}>Jumlah asal</Text>
+                <Text style={styles.originalTotal}>
+                  RM {subtotalPrice.toFixed(2)}
+                </Text>
+              </View>
+              <View style={styles.discountRow}>
+                <Text style={styles.discountLabel}>
+                  {PROMOTION_VOUCHER_CODE} · {PROMOTION_DISCOUNT_RATE * 100}%
+                </Text>
+                <Text style={styles.discountAmount}>
+                  - RM {discountAmount.toFixed(2)}
+                </Text>
+              </View>
+            </>
+          )}
           <View style={styles.totalRow}>
-            <Text style={styles.totalLabel}>Jumlah keseluruhan</Text>
+            <Text style={styles.totalLabel}>
+              {voucherApplied ? "Jumlah selepas promosi" : "Jumlah keseluruhan"}
+            </Text>
             <Text style={styles.totalPrice}>RM {totalPrice.toFixed(2)}</Text>
           </View>
           {!orderSubmitted && (
@@ -463,6 +544,42 @@ const styles = StyleSheet.create({
     minHeight: 82,
     marginBottom: 0,
   },
+  voucherRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  voucherInput: {
+    flex: 1,
+    marginBottom: 0,
+  },
+  voucherButton: {
+    minHeight: 46,
+    paddingHorizontal: 18,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 10,
+    backgroundColor: "#E05A47",
+  },
+  voucherButtonText: {
+    color: "#FFFFFF",
+    fontSize: 14,
+    fontWeight: "700",
+  },
+  voucherHint: {
+    color: "#817B75",
+    fontSize: 12,
+    lineHeight: 18,
+    marginTop: 7,
+    marginBottom: 15,
+  },
+  voucherSuccess: {
+    color: "#246B3B",
+    fontSize: 12,
+    lineHeight: 18,
+    marginTop: 7,
+    marginBottom: 15,
+  },
   paymentHint: {
     color: "#817B75",
     fontSize: 12,
@@ -629,6 +746,26 @@ const styles = StyleSheet.create({
     paddingBottom: 10,
     borderTopWidth: 1,
     borderColor: "#EEEEEE",
+  },
+  discountRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 7,
+  },
+  discountLabel: {
+    color: "#665F59",
+    fontSize: 12,
+  },
+  originalTotal: {
+    color: "#817B75",
+    fontSize: 12,
+    textDecorationLine: "line-through",
+  },
+  discountAmount: {
+    color: "#246B3B",
+    fontSize: 13,
+    fontWeight: "700",
   },
   totalRow: {
     flexDirection: "row",

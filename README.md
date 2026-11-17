@@ -66,7 +66,7 @@ Some networks block device-to-device connections. Use `--tunnel` or your phone's
 
 ## Demo login
 
-The app opens on a demo login screen. Enter a name, valid email, and a password of at least 6 characters; the name and email are shown on the profile screen. The profile includes a Contact Us form, recent orders, and About Us information. Checkout offers COD, FPX, and E-Wallet. Login and order history are local to the current app session; the Contact Us form is not connected to a customer-service backend.
+The app opens on a demo login screen. Enter a name, valid email, and a password of at least 6 characters; the name and email are shown on the profile screen. The profile includes a Contact Us form, recent orders, and About Us information. Checkout offers COD, FPX, and E-Wallet, and the BENTO10 voucher gives 10% off all items in the cart. Login and order history are local to the current app session; the Contact Us form is not connected to a customer-service backend.
 
 ## Author
 
