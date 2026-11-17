@@ -4,13 +4,18 @@ import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 export default function FoodCard({ item, onPress }) {
   return (
     <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.8}>
-      {/* 1. Paparan Imej Makanan */}
-      <Image source={item.image} style={styles.image} resizeMode="cover" />
+      {item.image ? (
+        <Image source={item.image} style={styles.image} resizeMode="cover" />
+      ) : (
+        <View style={styles.imagePlaceholder}>
+          <Text style={styles.imageEmoji}>{item.imageEmoji ?? "🍱"}</Text>
+        </View>
+      )}
 
-      {/* 2. Bekas Teks untuk Nama & Harga (Susunan Menegak) */}
       <View style={styles.info}>
-        <Text style={styles.name}>{item.name}</Text>
-        <Text style={styles.description}>{item.description}</Text>
+        <Text style={styles.category}>{item.category}</Text>
+        <Text style={styles.name} numberOfLines={2}>{item.name}</Text>
+        <Text style={styles.description} numberOfLines={2}>{item.description}</Text>
         <Text style={styles.price}>RM {item.price}</Text>
       </View>
     </TouchableOpacity>
@@ -41,12 +46,30 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     backgroundColor: "#F5F1EC",
   },
+  imagePlaceholder: {
+    width: 112,
+    height: 118,
+    borderRadius: 12,
+    backgroundColor: "#FFF1E8",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  imageEmoji: {
+    fontSize: 42,
+  },
   info: {
     flex: 1,
     minHeight: 112,
     justifyContent: "space-between",
     marginLeft: 14,
     paddingVertical: 4,
+  },
+  category: {
+    color: "#E05A47",
+    fontSize: 10,
+    fontWeight: "700",
+    textTransform: "uppercase",
+    letterSpacing: 0.6,
   },
   name: {
     fontSize: 16,

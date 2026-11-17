@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { View, Text, StyleSheet, FlatList, TextInput, Pressable } from "react-native";
+import { View, Text, StyleSheet, FlatList, TextInput, Pressable, ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Image } from "expo-image";
 import FoodCard from "../components/FoodCard";
@@ -8,12 +8,14 @@ import { useOrder } from "../context/OrderContext";
 export default function MenuScreen({ navigation }) {
   const { cartItems } = useOrder();
   const [searchText, setSearchText] = useState("");
-  const bentoMenu = [
+  const [selectedCategory, setSelectedCategory] = useState("Semua");
+  const menuItems = [
     { 
       id: "1", 
       name: "Bento Ayam Teriyaki",
       description: "Bento Ayam Teriyaki",
       price: "18.90",
+      category: "Bento",
       image: require("../assets/images/set_A.jpeg"),
       addOns: [
         { id: "extra-rice", name: "Nasi tambahan", price: 2 },
@@ -26,7 +28,8 @@ export default function MenuScreen({ navigation }) {
       name: "Bento Daging Yakiniku",
       description: "Bento Daging Yakiniku",
       price: "22.50",
-      image: require("../assets/images/set_B.jpeg"),
+      category: "Bento",
+      image: require("../assets/images/Bento-Daging.png"),
       addOns: [
         { id: "extra-beef", name: "Daging tambahan", price: 6 },
         { id: "fried-egg", name: "Telur mata", price: 2 },
@@ -38,6 +41,7 @@ export default function MenuScreen({ navigation }) {
       name: "Bento Salmon Mentega",
       description: "Bento Salmon Mentega",
       price: "25.00",
+      category: "Bento",
       image: require("../assets/images/set_C.jpeg"),
       addOns: [
         { id: "extra-salmon", name: "Salmon tambahan", price: 8 },
@@ -50,6 +54,7 @@ export default function MenuScreen({ navigation }) {
       name: "Bento Sayur dan Tauhu",
       description: "Bento Sayuran dan Tauhu",
       price: "15.00",
+      category: "Bento",
       image: require("../assets/images/set_D.jpeg"),
       addOns: [
         { id: "extra-tofu", name: "Tauhu tambahan", price: 3 },
@@ -62,22 +67,94 @@ export default function MenuScreen({ navigation }) {
       name: "Bento Ayam Katsu",
       description: "Ayam rangup dengan sos istimewa",
       price: "20.90",
-      image: require("../assets/images/bento set e.jpg"),
+      category: "Bento",
+      image: require("../assets/images/Bento-Ayam.jpg"),
       addOns: [
         { id: "extra-rice", name: "Nasi tambahan", price: 2 },
         { id: "curry-sauce", name: "Sos kari Jepun", price: 2.5 },
         { id: "fried-egg", name: "Telur mata", price: 2 },
       ],
     },
+    {
+      id: "6",
+      name: "Ramen Miso",
+      description: "Mi ramen dalam kuah miso yang pekat",
+      price: "19.90",
+      category: "Makanan",
+      image: require("../assets/images/Ramen-miso.png"),
+      addOns: [
+        { id: "ramen-egg", name: "Telur ramen", price: 2.5 },
+        { id: "ramen-noodles", name: "Mi tambahan", price: 3 },
+      ],
+    },
+    {
+      id: "7",
+      name: "Gyoza Ayam",
+      description: "Ladu ayam panggang · 5 biji",
+      price: "9.90",
+      category: "Makanan",
+      image: require("../assets/images/groza-ayam.png"),
+      addOns: [{ id: "gyoza-extra", name: "Tambah 3 biji", price: 5 }],
+    },
+    {
+      id: "8",
+      name: "Karaage Ayam",
+      description: "Ayam goreng rangup ala Jepun",
+      price: "12.90",
+      category: "Makanan",
+      image: require("../assets/images/ayam karagee.png"),
+      addOns: [{ id: "karaage-extra", name: "Tambah ayam", price: 5 }],
+    },
+    {
+      id: "9",
+      name: "Matcha Latte",
+      description: "Matcha Jepun dengan susu berkrim",
+      price: "8.90",
+      category: "Minuman",
+      image: require("../assets/images/matcha-latte.png"),
+      addOns: [{ id: "matcha-oat", name: "Tukar ke susu oat", price: 1.5 }],
+    },
+    {
+      id: "10",
+      name: "Teh Lemon Ais",
+      description: "Teh lemon yang menyegarkan",
+      price: "5.90",
+      category: "Minuman",
+      image: require("../assets/images/teh-lemon-ais.png"),
+      addOns: [{ id: "lemon-less-sugar", name: "Kurang gula", price: 0 }],
+    },
+    {
+      id: "11",
+      name: "Soda Laici",
+      description: "Soda berkarbonat dengan laici",
+      price: "6.90",
+      category: "Minuman",
+      image: require("../assets/images/soda-laici.png"),
+      addOns: [{ id: "lychee-extra", name: "Tambah laici", price: 1.5 }],
+    },
+    {
+      id: "12",
+      name: "Air Mineral",
+      description: "Air mineral botol",
+      price: "2.00",
+      category: "Minuman",
+      image: require("../assets/images/spritzer.png"),
+      addOns: [],
+    },
   ];
 
+  const categories = ["Semua", "Bento", "Makanan", "Minuman"];
   const openCart = () => {
     navigation.navigate("OrderSummary");
   };
 
-  const filteredMenu = bentoMenu.filter((item) =>
-    `${item.name} ${item.description}`.toLowerCase().includes(searchText.trim().toLowerCase())
-  );
+  const filteredMenu = menuItems.filter((item) => {
+    const matchesCategory = selectedCategory === "Semua" || item.category === selectedCategory;
+    const matchesSearch = `${item.name} ${item.description}`
+      .toLowerCase()
+      .includes(searchText.trim().toLowerCase());
+    return matchesCategory && matchesSearch;
+  });
 
   return (
     <SafeAreaView style={styles.container}>
@@ -85,7 +162,7 @@ export default function MenuScreen({ navigation }) {
         <View>
           <Text style={styles.brand}>BENTOX AMIRUL</Text>
           <Text style={styles.title}>Menu hari ini</Text>
-          <Text style={styles.subtitle}>Pilih bento kegemaran anda</Text>
+          <Text style={styles.subtitle}>Makanan Jepun dan minuman kegemaran</Text>
         </View>
         <Pressable
           onPress={openCart}
@@ -106,18 +183,44 @@ export default function MenuScreen({ navigation }) {
       <View style={styles.searchContainer}>
         <Image source={require("../assets/icons/search-icon.svg")} style={styles.searchIcon} contentFit="contain"/>
         <TextInput
-          placeholder="Cari menu bento..."
+          placeholder="Cari makanan atau minuman..."
           placeholderTextColor="#999999"
           style={styles.searchInput}
           value={searchText}
           onChangeText={setSearchText}
           returnKeyType="search"
-          accessibilityLabel="Cari menu bento"
+          accessibilityLabel="Cari makanan dan minuman"
         />
       </View>
 
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.categoryList}
+        style={styles.categoryScroll}
+      >
+        {categories.map((category) => {
+          const isSelected = selectedCategory === category;
+          return (
+            <Pressable
+              key={category}
+              onPress={() => setSelectedCategory(category)}
+              accessibilityRole="button"
+              accessibilityState={{ selected: isSelected }}
+              style={[styles.categoryChip, isSelected && styles.categoryChipSelected]}
+            >
+              <Text style={[styles.categoryText, isSelected && styles.categoryTextSelected]}>
+                {category}
+              </Text>
+            </Pressable>
+          );
+        })}
+      </ScrollView>
+
       <View style={styles.listHeading}>
-        <Text style={styles.listTitle}>Pilihan bento</Text>
+        <Text style={styles.listTitle}>
+          {selectedCategory === "Semua" ? "Pilihan menu" : selectedCategory}
+        </Text>
         <Text style={styles.itemCount}>{filteredMenu.length} menu</Text>
       </View>
 
@@ -213,7 +316,7 @@ const styles = StyleSheet.create({
     height: 50,
     borderWidth: 1,
     borderColor: "#F0EAE4",
-    marginBottom: 22,
+    marginBottom: 16,
   },
   searchIcon: {
     width: 17,
@@ -224,6 +327,36 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 15,
     color: "#292522",
+  },
+  categoryScroll: {
+    flexGrow: 0,
+    marginBottom: 18,
+  },
+  categoryList: {
+    gap: 9,
+    paddingRight: 4,
+  },
+  categoryChip: {
+    minHeight: 38,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: "#EAE2DA",
+    backgroundColor: "#FFFFFF",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 16,
+  },
+  categoryChipSelected: {
+    borderColor: "#E05A47",
+    backgroundColor: "#E05A47",
+  },
+  categoryText: {
+    color: "#665F59",
+    fontSize: 13,
+    fontWeight: "600",
+  },
+  categoryTextSelected: {
+    color: "#FFFFFF",
   },
   listHeading: {
     flexDirection: "row",

@@ -71,7 +71,7 @@ export default function OrderSummaryScreen({ navigation }) {
             </View>
             <Text style={styles.emptyTitle}>Troli masih kosong</Text>
             <Text style={styles.emptyDescription}>
-              Pilih bento kegemaran anda dan ia akan muncul di sini.
+              Pilih makanan atau minuman kegemaran anda dan ia akan muncul di sini.
             </Text>
             <Pressable
               onPress={() => navigation.navigate("Menu")}
@@ -91,7 +91,9 @@ export default function OrderSummaryScreen({ navigation }) {
                 {foodItem?.image ? (
                   <Image source={foodItem.image} style={styles.image} resizeMode="cover" />
                 ) : (
-                  <View style={styles.imagePlaceholder} />
+                  <View style={styles.imagePlaceholder}>
+                    <Text style={styles.imageEmoji}>{foodItem?.imageEmoji ?? "🍱"}</Text>
+                  </View>
                 )}
                 <View style={styles.itemInfo}>
                   <Text style={styles.itemName} numberOfLines={2}>
@@ -107,9 +109,11 @@ export default function OrderSummaryScreen({ navigation }) {
               </View>
 
               <View style={styles.options}>
-                <View style={styles.optionPill}>
-                  <Text style={styles.optionText}>Pedas · Tahap {spiceLevel ?? 1}</Text>
-                </View>
+                {foodItem?.category !== "Minuman" && (
+                  <View style={styles.optionPill}>
+                    <Text style={styles.optionText}>Pedas · Tahap {spiceLevel ?? 1}</Text>
+                  </View>
+                )}
                 {selectedAddOns.length > 0 && (
                   <View style={styles.addOnList}>
                     <Text style={styles.addOnLabel}>Tambahan:</Text>
@@ -385,6 +389,11 @@ const styles = StyleSheet.create({
     height: 88,
     borderRadius: 10,
     backgroundColor: "#F1F1F1",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  imageEmoji: {
+    fontSize: 34,
   },
   itemInfo: {
     flex: 1,

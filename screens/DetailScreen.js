@@ -58,8 +58,12 @@ export default function DetailScreen({ route, navigation }) {
       <ScrollView showsVerticalScrollIndicator={false}>
         <View style={styles.detailCard}>
           {/* Gambar Makanan */}
-          {foodItem?.image && (
+          {foodItem?.image ? (
             <Image source={foodItem.image} style={styles.image} resizeMode="contain"/>
+          ) : (
+            <View style={styles.imagePlaceholder}>
+              <Text style={styles.imageEmoji}>{foodItem?.imageEmoji ?? "🍱"}</Text>
+            </View>
           )}
 
           {/* Maklumat Utama */}
@@ -74,45 +78,53 @@ export default function DetailScreen({ route, navigation }) {
           </Text>
 
           {/* Pemilihan Tahap Pedas */}
-          <View style={styles.section}>
-            <Text style={styles.sectionLabel}>Tahap Pedas:</Text>
-            <View style={styles.spiceContainer}>
-              {[1, 2, 3].map((level) => (
-                <View key={level} style={styles.spiceButtonWrapper}>
-                  <CustomButton title={`Tahap ${level}`} onPress={() => setSpiceLevel(level)} variant={spiceLevel === level ? "primary" : "disabled"}/>
-                </View>
-              ))}
-            </View>
-          </View>
-
-          <View style={styles.section}>
-            <Text style={styles.sectionLabel}>Tambahan pilihan</Text>
-            <Text style={styles.addOnHint}>Tandakan tambahan yang anda inginkan:</Text>
-            {(foodItem?.addOns ?? []).map((addOn) => {
-              const isSelected = selectedAddOnIds.includes(addOn.id);
-              return (
-                <Pressable
-                  key={addOn.id}
-                  onPress={() =>
-                    setSelectedAddOnIds((current) =>
-                      isSelected
-                        ? current.filter((id) => id !== addOn.id)
-                        : [...current, addOn.id]
-                    )
-                  }
-                  accessibilityRole="checkbox"
-                  accessibilityState={{ checked: isSelected }}
-                  style={[styles.addOnOption, isSelected && styles.addOnOptionSelected]}
-                >
-                  <View style={[styles.checkbox, isSelected && styles.checkboxSelected]}>
-                    {isSelected && <Text style={styles.checkboxCheck}>✓</Text>}
+          {foodItem?.category !== "Minuman" && (
+            <View style={styles.section}>
+              <Text style={styles.sectionLabel}>Tahap Pedas:</Text>
+              <View style={styles.spiceContainer}>
+                {[1, 2, 3].map((level) => (
+                  <View key={level} style={styles.spiceButtonWrapper}>
+                    <CustomButton title={`Tahap ${level}`} onPress={() => setSpiceLevel(level)} variant={spiceLevel === level ? "primary" : "disabled"}/>
                   </View>
-                  <Text style={styles.addOnName}>{addOn.name}</Text>
-                  <Text style={styles.addOnPrice}>+ RM {Number(addOn.price).toFixed(2)}</Text>
-                </Pressable>
-              );
-            })}
-          </View>
+                ))}
+              </View>
+            </View>
+          )}
+
+          {(foodItem?.addOns ?? []).length > 0 && (
+            <View style={styles.section}>
+              <Text style={styles.sectionLabel}>Pilihan tambahan</Text>
+              <Text style={styles.addOnHint}>Pilih jika mahu:</Text>
+              {(foodItem?.addOns ?? []).map((addOn) => {
+                const isSelected = selectedAddOnIds.includes(addOn.id);
+                return (
+                  <Pressable
+                    key={addOn.id}
+                    onPress={() =>
+                      setSelectedAddOnIds((current) =>
+                        isSelected
+                          ? current.filter((id) => id !== addOn.id)
+                          : [...current, addOn.id]
+                      )
+                    }
+                    accessibilityRole="checkbox"
+                    accessibilityState={{ checked: isSelected }}
+                    style={[styles.addOnOption, isSelected && styles.addOnOptionSelected]}
+                  >
+                    <View style={[styles.checkbox, isSelected && styles.checkboxSelected]}>
+                      {isSelected && <Text style={styles.checkboxCheck}>✓</Text>}
+                    </View>
+                    <Text style={styles.addOnName}>{addOn.name}</Text>
+                    <Text style={styles.addOnPrice}>
+                      {Number(addOn.price) > 0
+                        ? `+ RM ${Number(addOn.price).toFixed(2)}`
+                        : "Tiada caj"}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+          )}
 
           {/* Borang Nota Khas */}
           <View style={styles.section}>
@@ -173,6 +185,18 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     alignSelf: "center",
     marginBottom: 12,
+  },
+  imagePlaceholder: {
+    width: "100%",
+    height: 200,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#FFF1E8",
+    marginBottom: 12,
+  },
+  imageEmoji: {
+    fontSize: 76,
   },
   name: {
     fontSize: 20,
